@@ -1,8 +1,9 @@
 import readline
 from pathlib import Path
-from typing import Iterable, Optional, Sequence
+from typing import Optional
+from collections.abc import Callable, Iterable, Sequence
 
-from .protocols import Entry, QueryFunc
+from .entry import Entry, dump_entry, dump_all_entries
 from .print_ui import page_text
 
 PROMPT = "jp> "
@@ -28,6 +29,8 @@ Available commands:
         query args
 """.strip()
 
+QueryFunc = Callable[[str], Sequence[Entry]]
+
 
 class ReplError(Exception):
     pass
@@ -38,32 +41,6 @@ def read_history_file(history_file: Path) -> None:
         readline.read_history_file(history_file)
     except FileNotFoundError:
         pass
-
-
-def dump_entry(entry: Entry, num: int) -> str:
-    sections = []
-    kanji_line = (
-        f"{entry.kanji}\n{entry.kana}"
-        if entry.kanji
-        else entry.kana
-    )
-    sections.append(f"{f'{num})':<4}{kanji_line}")
-    sections.extend(
-        f"    {i}. [{tag}]\n{meaning}"
-        for i, (tag, meaning) in enumerate(entry.meanings, 1)
-    )
-    if entry.alt_forms:
-        sections.append(f"Other Forms: {'、'.join(entry.alt_forms)}")
-    return "\n\n".join(sections)
-
-
-def dump_all_entries(entries: Iterable[Entry]) -> str:
-    sep = "\n\n"
-    entry_strs = sep.join(
-        dump_entry(entry, i)
-        for i, entry in enumerate(entries, 1)
-    )
-    return sep + entry_strs + sep
 
 
 def parse_input_str(input_str: str) -> tuple[str, list[str]]:
@@ -91,19 +68,20 @@ class Repl:
             read_history_file(history_file)
 
     def dump_cur_result(self) -> str:
-        return dump_entry(self.results[self.result_idx], self.result_idx)
+        return dump_entry(self.results[self.result_idx], self.result_idx + 1)
 
     def increment_result(self) -> None:
-        results_len = len(self.results)
-        if self.result_idx >= results_len:
-            self.result_idx = results_len
+        max_idx = len(self.results) - 1
+        if self.result_idx >= max_idx:
+            self.result_idx = max_idx
             raise ReplError("No next result")
         else:
             self.result_idx += 1
 
     def decriment_result(self) -> None:
-        if self.result_idx >= 0:
-            self.result_idx = 0
+        min_idx = 0
+        if self.result_idx <= min_idx:
+            self.result_idx = min_idx
             raise ReplError("No previous result")
         else:
             self.result_idx -= 1

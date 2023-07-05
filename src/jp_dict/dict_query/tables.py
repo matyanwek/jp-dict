@@ -1,7 +1,7 @@
 import json
 import gzip
+import shutil
 from typing import Any
-from pathlib import Path
 from importlib import resources
 from xml.etree import ElementTree
 from urllib.request import urlopen
@@ -101,7 +101,9 @@ def get_en_term_freqs(entry: Entry) -> dict[str, int]:
 
 def write_traversable(obj: Any, trav: Traversable) -> None:
     with resources.as_file(trav) as path:
-        path.write_text(json.dumps(obj, indent=4))
+        if not path.parent.exists():
+            path.parent.mkdir(parents=True)
+        path.write_text(json.dumps(obj, indent=4, ensure_ascii=False) + "\n")
 
 
 def write_entry(entry: Entry) -> None:
@@ -110,7 +112,7 @@ def write_entry(entry: Entry) -> None:
 
 
 def index_dictionary(dict_xml: bytes) -> None:
-    root = ElementTree.parse(dict_xml).getroot()
+    root = ElementTree.fromstring(dict_xml)
     kana_table = {}
     kanji_table = {}
     rank_table = {}
@@ -131,6 +133,22 @@ def index_dictionary(dict_xml: bytes) -> None:
 def update_dictionary() -> None:
     gzip_bytes = urlopen(DICT_DL_URL).read()
     index_dictionary(gzip.decompress(gzip_bytes))
+
+
+def del_traversable(trav: Traversable) -> None:
+    with resources.as_file(trav) as path:
+        if path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+
+
+def clean_dictionary() -> None:
+    del_traversable(KANA_TABLE_JSON)
+    del_traversable(KANJI_TABLE_JSON)
+    del_traversable(RANK_TABLE_JSON)
+    del_traversable(EN_TERMS_TABLE_JSON)
+    del_traversable(ENTRIES_DIR)
 
 
 def entry_object_hook(json_obj: dict[Any, Any]) -> Entry | dict[Any, Any]:

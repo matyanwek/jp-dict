@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 from collections.abc import Callable, Sequence
 
 from .ui import print_query, run_repl
-from .dict_query import update_dictionary, search_dictionary
+from .dict_query import update_dictionary, search_dictionary, clean_dictionary
 
 APP_DESCRIPTION = """
 Search for terms and return a listing of Japanese-to-English dictionary results.
@@ -22,6 +22,11 @@ def parse_args(args: Sequence[str]) -> Callable[[], None]:
         "--update",
         action="store_true",
         help="update the dictionary data and exit; overrides other arguments",
+    )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="delete all dictionary files",
     )
     parser.add_argument(
         "--all",
@@ -41,12 +46,14 @@ def parse_args(args: Sequence[str]) -> Callable[[], None]:
     parsed_args = parser.parse_args(args)
     if parsed_args.update:
         return update_dictionary
-    elif parsed_args.search_terms:
+    elif parsed_args.clean:
+        return clean_dictionary
+    elif parsed_args.search_strs:
         return functools.partial(
             print_query,
-            query=" ".join(parsed_args.search_terms),
+            query=" ".join(parsed_args.search_strs),
             query_func=search_dictionary,
-            dump_all=parsed_args.all,
+            print_all=parsed_args.all,
         )
     else:
         return functools.partial(
