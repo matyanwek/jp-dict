@@ -48,6 +48,10 @@ def query_func(_: str) -> list[Entry]:
     return RESULTS
 
 
+def query_func_empty(_: str) -> list[Entry]:
+    return []
+
+
 EXPECTED_FIRST_PRINT = """
 1)  first kanji
     first kana
@@ -119,6 +123,25 @@ class TestPrintUi(unittest.TestCase):
         err_msg = "Cannot find $PAGER, is this env var set?"
         with self.assertRaises(EnvironmentError, msg=err_msg):
             print_query(query_func=query_func, query="", page=True)
+
+    @mock.patch("sys.stdout", new_callable=io.StringIO)
+    def test_empty_query(self, mock_out: io.StringIO) -> None:
+        print_query(query_func=query_func_empty, query="query")
+        mock_out.seek(0)
+        self.assertEqual("No results for query\n", mock_out.read())
+        mock_out.seek(0)
+        print_query(query_func=query_func_empty, query="query", print_all=True)
+        mock_out.seek(0)
+        self.assertEqual("No results for query\n", mock_out.read())
+        mock_out.seek(0)
+        print_query(
+            query_func=query_func_empty,
+            query="query",
+            print_all=True,
+            page=True
+        )
+        mock_out.seek(0)
+        self.assertEqual("No results for query\n", mock_out.read())
 
 
 class TestReplUi(unittest.TestCase):
@@ -228,6 +251,26 @@ class TestReplUi(unittest.TestCase):
     def test_exit(self) -> None:
         with self.assertRaises(EOFError):
             with mock.patch("builtins.input", side_effect=["\\exit"]):
+                run_once(self.repl)
+
+
+class TestReplUiEmptyQuery(unittest.TestCase):
+
+    EXPECTED_QUERY = "expected query"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.repl = Repl(query_func=query_func_empty)
+
+    def setUp(self) -> None:
+        self.repl.query = self.EXPECTED_QUERY
+        self.repl.result_idx = 0
+        self.repl.results = []
+
+    def test_query(self) -> None:
+        err_msg = f"No results for {self.EXPECTED_QUERY}\n"
+        with mock.patch("builtins.input", side_effect=[self.EXPECTED_QUERY]):
+            with self.assertRaises(ReplError, msg=err_msg):
                 run_once(self.repl)
 
 

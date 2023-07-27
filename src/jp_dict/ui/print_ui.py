@@ -1,10 +1,10 @@
 import os
 import subprocess
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Sequence
 
 from .entry import Entry, dump_entry, dump_all_entries
 
-QueryFunc = Callable[[str], Iterable[Entry]]
+QueryFunc = Callable[[str], Sequence[Entry]]
 
 
 def page_text(text: str) -> None:
@@ -22,15 +22,13 @@ def print_query(
     page: bool=False,
 ) -> None:
     results = query_func(query)
-    if print_all:
+    if not results:
+        print(f"No results for {query}")
+        return
+    elif print_all:
         text = dump_all_entries(results)
     else:
-        try:
-            result = next(iter(results))
-        except StopIteration:
-            text = ""
-        else:
-            text = dump_entry(result, 1)
+        text = dump_entry(results[0], 1)
     if page:
         page_text(text)
     else:

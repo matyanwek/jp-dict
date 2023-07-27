@@ -68,7 +68,16 @@ class Repl:
             read_history_file(history_file)
 
     def dump_cur_result(self) -> str:
-        return dump_entry(self.results[self.result_idx], self.result_idx + 1)
+        if not self.results:
+            raise ReplError(f"No results for {self.query}")
+        entry = self.results[self.result_idx]
+        return dump_entry(entry, self.result_idx + 1)
+
+    def dump_all_results(self) -> str:
+        if not self.results:
+            raise ReplError(f"No results for {self.query}")
+        else:
+            return dump_all_entries(self.results)
 
     def increment_result(self) -> None:
         max_idx = len(self.results) - 1
@@ -101,7 +110,7 @@ class Repl:
 def run_once(repl: Repl) -> Repl:
     match parse_input_str(input(PROMPT)):
         case "a" | "all" | "page", _:
-            page_text(dump_all_entries(repl.results))
+            page_text(repl.dump_all_results())
         case "n" | "next", _:
             repl.increment_result()
             print(repl.dump_cur_result())

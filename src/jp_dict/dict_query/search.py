@@ -44,6 +44,9 @@ def search_jp(search_str: str, table: LazyTable) -> list[int]:
                 start_matches.append(id)
             elif search_str in value:
                 contain_matches.append(id)
+    exact_matches.sort(key=lambda id: RANK_TABLE.contents[id])
+    start_matches.sort(key=lambda id: RANK_TABLE.contents[id])
+    contain_matches.sort(key=lambda id: RANK_TABLE.contents[id])
     return exact_matches + start_matches + contain_matches
 
 
@@ -64,15 +67,27 @@ def search_en(search_str: str) -> list[int]:
     search_terms = make_en_terms(search_str)
     entry_scores = {}
     for id, terms in EN_TERMS_TABLE.contents.items():
-        terms_count = sum(
-            1
-            for term in search_terms
-            if term in terms
-        )
+        # terms_count = sum(
+        #     1
+        #     for term in search_terms
+        #     if term in terms
+        # )
+        terms_count = 0
+        term_order_inverse = 1
+        for i, term in enumerate(terms, 1):
+            if term in search_terms:
+                terms_count += 1
+                term_order_inverse += i
         if terms_count:
-            # sort order: by num of matching search terms, then by rank
+            # sort order: by num of matching search terms, then by rank, then by
+            # order of terms
             # exclude entries with no matching terms
-            entry_scores[id] = (-terms_count, RANK_TABLE.contents[id])
+            entry_scores[id] = (
+                -terms_count,
+                RANK_TABLE.contents[id],
+                term_order_inverse
+            )
+            print(id, entry_scores[id])
     return sorted(entry_scores.keys(), key=lambda key: entry_scores[key])
 
 

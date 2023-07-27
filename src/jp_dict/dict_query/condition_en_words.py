@@ -9,9 +9,15 @@ def stem_word(word: str) -> str:
 
 def make_en_terms(sentence: str) -> list[str]:
     """split a sentence into normalized word stems"""
-    stems = []
-    for word in sentence.split():
-        stem = stem_word(word)
-        if len(stem) > 2:
-            stems.append(stem)
-    return stems
+    # stems = []
+    # for word in sentence.split():
+    #     stem = stem_word(word)
+    #     if len(stem) > 2:
+    #         stems.append(stem)
+    # return stems
+    return [
+        stem
+        for word in sentence.split()
+        if (stem := stem_word(word))
+        and len(stem) > 2
+    ]
