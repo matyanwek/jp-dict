@@ -87,7 +87,6 @@ def search_en(search_str: str) -> list[int]:
                 RANK_TABLE.contents[id],
                 term_order_inverse
             )
-            print(id, entry_scores[id])
     return sorted(entry_scores.keys(), key=lambda key: entry_scores[key])
 
 
