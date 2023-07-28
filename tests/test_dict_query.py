@@ -1,6 +1,9 @@
+import time
 import unittest
+from unittest import mock
 
 from src.jp_dict.dict_query.search import search_dictionary
+from src.jp_dict.dict_query.lazy_table import LazyTable
 
 # compare first result ID to an iterable of IDs
 # the idea is to ensure the first result is sensible
@@ -33,7 +36,7 @@ class TestJpSearch(unittest.TestCase):
         """entries with only a hiragana component, no kanji"""
         pass
 
-    @unittest.skip("will fail; no way to convert hiragana to katakana")
+    @unittest.skip("will fail; can't currently convert hiragana to katakana")
     def test_romaji_input_katakana_only(self) -> None:
         """entries with only a katakana component, no kanji or hiragana"""
         results = search_dictionary("oorubakku")
@@ -51,6 +54,31 @@ class TestJpSearch(unittest.TestCase):
     def test_katakana_input(self) -> None:
         results = search_dictionary("オールバック")
         self.assertIn(results[0].id, [1033740])  # オールバック
+
+
+LAZY_TIMEOUT = 3
+
+
+class TestLazyTable(unittest.TestCase):
+
+    @mock.patch("src.jp_dict.dict_query.lazy_table.TIMEOUT", new=LAZY_TIMEOUT)
+    def test_lazy_table(self) -> None:
+        lazy_table = LazyTable(lambda: {})
+        # contents unloaded
+        self.assertFalse(hasattr(lazy_table, "_contents"))
+        # load contents and return
+        self.assertEqual(lazy_table.contents, {})
+        # contents loaded
+        self.assertTrue(hasattr(lazy_table, "_contents"))
+        time.sleep(1)
+        # reload contents before timeout
+        lazy_table.contents
+        time.sleep(2)
+        # contents still loaded after first load timeout
+        self.assertTrue(hasattr(lazy_table, "_contents"))
+        time.sleep(LAZY_TIMEOUT - 2)
+        # contents unloaded after last load timeout
+        self.assertFalse(hasattr(lazy_table, "_contents"))
 
 
 if __name__ == "__main__":

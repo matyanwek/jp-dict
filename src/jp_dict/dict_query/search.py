@@ -1,7 +1,5 @@
-from typing import Any
-from collections.abc import Callable
-
 from .entry import Entry
+from .lazy_table import LazyTable
 from .condition_en_words import make_en_terms
 from .romaji_to_kana import KanaError, convert_romaji_to_kana
 from .tables import (
@@ -11,18 +9,6 @@ from .tables import (
     load_rank_table,
     load_en_terms_table,
 )
-
-
-class LazyTable:
-
-    def __init__(self, method: Callable[[], dict[int, Any]]) -> None:
-        self._method = method
-
-    @property
-    def contents(self) -> dict[int, Any]:
-        if not hasattr(self, "_contents"):
-            self._contents = self._method()
-        return self._contents
 
 
 KANA_TABLE = LazyTable(load_kana_table)
