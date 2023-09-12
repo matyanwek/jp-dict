@@ -56,8 +56,8 @@ class Repl:
     def __init__(
         self,
         query_func: QueryFunc,
-        backup_query_func: Optional[QueryFunc]=None,
-        history_file: Optional[Path]=None,
+        backup_query_func: Optional[QueryFunc] = None,
+        history_file: Optional[Path] = None,
     ) -> None:
         self.query_func = query_func
         self.backup_query_func = backup_query_func
@@ -95,7 +95,7 @@ class Repl:
         else:
             self.result_idx -= 1
 
-    def search_query(self, args: Iterable[str], backup: bool=False) -> None:
+    def search_query(self, args: Iterable[str], backup: bool = False) -> None:
         if args:
             self.query = " ".join(args)
         if not backup:
@@ -134,8 +134,8 @@ def run_once(repl: Repl) -> Repl:
 
 def run_repl(
     query_func: QueryFunc,
-    backup_query_func: Optional[QueryFunc]=None,
-    history_file: Optional[Path]=None
+    backup_query_func: Optional[QueryFunc] = None,
+    history_file: Optional[Path] = None
 ) -> None:
     repl = Repl(query_func, backup_query_func, history_file)
     while True:

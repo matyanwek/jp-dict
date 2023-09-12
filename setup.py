@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="jp-dict",
-    version="0.3",
+    version="0.4",
     description="A command line Japanese-English dictionary",
     long_description=long_description,
     long_description_content_type="text/markdown",

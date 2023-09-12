@@ -84,19 +84,19 @@ def make_entry(elt: ElementTree.Element) -> Entry:
     return Entry(id, rank, kanjis, kanas, meanings)
 
 
-def get_en_term_freqs(entry: Entry) -> dict[str, int]:
-    en_terms = [
-        term
-        for _, meaning in entry.meanings
-        for term in make_en_terms(meaning)
-    ]
-    freqs = {}
-    for term in en_terms:
-        try:
-            freqs[term] += 1
-        except KeyError:
-            freqs[term] = 1
-    return freqs
+# def get_en_term_freqs(entry: Entry) -> dict[str, int]:
+#     en_terms = [
+#         term
+#         for _, meaning in entry.meanings
+#         for term in make_en_terms(meaning)
+#     ]
+#     freqs: dict[str, int] = {}
+#     for term in en_terms:
+#         try:
+#             freqs[term] += 1
+#         except KeyError:
+#             freqs[term] = 1
+#     return freqs
 
 
 def write_traversable(obj: Any, trav: Traversable) -> None:
@@ -123,7 +123,12 @@ def index_dictionary(dict_xml: bytes) -> None:
         kana_table[entry.id] = entry.kanas
         kanji_table[entry.id] = entry.kanjis
         rank_table[entry.id] = entry.rank
-        en_terms_table[entry.id] = get_en_term_freqs(entry)
+        # en_terms_table[entry.id] = get_en_term_freqs(entry)
+        en_terms_table[entry.id] = [
+            term
+            for _, meaning in entry.meanings
+            for term in make_en_terms(meaning)
+        ]
     write_traversable(kana_table, KANA_TABLE_JSON)
     write_traversable(kanji_table, KANJI_TABLE_JSON)
     write_traversable(rank_table, RANK_TABLE_JSON)
